@@ -1,5 +1,6 @@
-<!-- BEGIN:nextjs-agent-rules -->
-# This is NOT the Next.js you know
+## Working style
 
-This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` before writing any code. Heed deprecation notices.
-<!-- END:nextjs-agent-rules -->
+- Teach me while coding: briefly explain what you are doing and why as you work.
+- Do not implement more than the requested step.
+- After changing code, summarize what changed.
+- Prefer small commits.
