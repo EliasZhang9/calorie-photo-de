@@ -1,7 +1,12 @@
 export default function Home() {
+  const currentEnvironment = process.env.NODE_ENV ?? "unknown";
+
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-4xl flex-col gap-10 px-6 py-12 sm:px-10">
       <section className="space-y-4">
+        <p className="inline-flex w-fit rounded-full border border-amber-300 bg-amber-50 px-3 py-1 text-sm font-medium text-amber-900">
+          Environment: {currentEnvironment}
+        </p>
         <h1 className="text-3xl font-semibold text-zinc-900 sm:text-4xl">
           Food Photo Calorie Estimator
         </h1>
