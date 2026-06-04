@@ -77,7 +77,7 @@ export default function LoginPage() {
         </div>
 
         <div className="rounded-lg border border-zinc-200 bg-white p-4">
-          <Authenticator loginMechanisms={["email"]} initialState="signIn">
+          <Authenticator loginMechanisms={["username", "email"]} initialState="signIn">
             {({ signOut, user }) => (
               <div className="space-y-4 p-2">
                 <div className="space-y-1">
