@@ -61,12 +61,20 @@ NEXT_PUBLIC_S3_REGION=`}
   );
 }
 
-function UploadForm() {
+type UploadFormProps = {
+  username?: string;
+};
+
+function UploadForm({ username }: UploadFormProps) {
   const [file, setFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [progress, setProgress] = useState(0);
   const [message, setMessage] = useState<string | null>(null);
   const [storedPath, setStoredPath] = useState<string | null>(null);
+  const sanitizedUsername = (username ?? "unknown-user").replace(
+    /[^a-zA-Z0-9._-]/g,
+    "-",
+  );
 
   const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
     const nextFile = event.target.files?.[0] ?? null;
@@ -93,7 +101,7 @@ function UploadForm() {
       const result = await uploadData({
         // Keep each user's uploads in their own private folder in S3.
         path: ({ identityId }) =>
-          `private/${identityId}/food-images/${Date.now()}-${sanitizedName}`,
+          `private/${identityId}#${sanitizedUsername}/food-images/${Date.now()}-${sanitizedName}`,
         data: file,
         options: {
           contentType: file.type || "application/octet-stream",
@@ -203,7 +211,7 @@ export default function UploadPage() {
       </div>
 
       <Authenticator loginMechanisms={["username", "email"]} initialState="signIn">
-        <UploadForm />
+        {({ user }) => <UploadForm username={user?.username} />}
       </Authenticator>
     </main>
   );
