@@ -31,6 +31,10 @@ function validateCreateMealLogInput(
 
   const input = value as Record<string, unknown>;
 
+  if (typeof input.userName !== "string" || input.userName.trim() === "") {
+    return { ok: false, error: "userName is required." };
+  }
+
   if (typeof input.imageKey !== "string" || input.imageKey.trim() === "") {
     return { ok: false, error: "imageKey is required." };
   }
@@ -73,6 +77,7 @@ function validateCreateMealLogInput(
   return {
     ok: true,
     data: {
+      userName: input.userName.trim(),
       imageKey: input.imageKey.trim(),
       status: input.status,
       caloriesMin: input.caloriesMin as number | undefined,
@@ -105,6 +110,7 @@ export async function POST(request: Request) {
   const createdAt = new Date().toISOString();
   const mealLog: MealLogRecord = {
     id: randomUUID(),
+    userName: validation.data.userName,
     imageKey: validation.data.imageKey,
     status: validation.data.status ?? "uploaded",
     createdAt,

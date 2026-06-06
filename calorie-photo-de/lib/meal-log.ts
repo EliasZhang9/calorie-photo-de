@@ -8,6 +8,7 @@ export const MEAL_LOG_STATUSES = [
 export type MealLogStatus = (typeof MEAL_LOG_STATUSES)[number];
 
 export interface CreateMealLogInput {
+  userName: string;
   imageKey: string;
   status?: MealLogStatus;
   caloriesMin?: number;
@@ -19,6 +20,7 @@ export interface CreateMealLogInput {
 
 export interface MealLogRecord {
   id: string;
+  userName: string;
   imageKey: string;
   status: MealLogStatus;
   caloriesMin?: number;
