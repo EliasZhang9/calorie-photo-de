@@ -17,12 +17,14 @@
 
 - `app/page.tsx`: landing page with links to login, upload, and a not-yet-implemented dashboard.
 - `app/login/page.tsx`: Cognito login UI using Amplify `Authenticator`.
-- `app/upload/page.tsx`: authenticated S3 upload flow from the browser.
+- `app/upload/page.tsx`: authenticated S3 upload flow from the browser using the shared upload helper.
 - `app/api/meals/route.ts`: POST route that validates meal-log payloads and writes to DynamoDB.
 - `lib/amplify-auth-config.ts`: shared Amplify setup and env-var guards.
 - `lib/dynamodb.ts`: server-only DynamoDB client and table-name accessors.
 - `lib/meal-log.ts`: meal-log types and status validation helpers.
-- `lib/amplify-auth-config.test.ts`: current Vitest coverage.
+- `lib/upload-food-image.ts`: shared Amplify Storage helper for building private S3 upload paths and forwarding progress.
+- `lib/amplify-auth-config.test.ts`: Vitest coverage for Amplify env/config behavior.
+- `lib/upload-food-image.test.ts`: Vitest coverage for authorized and unauthorized S3 upload behavior.
 
 ## Commands
 
@@ -55,7 +57,7 @@ Notes:
 - Use the `@/*` import alias defined in `tsconfig.json` for local imports when it keeps paths clearer.
 - Keep client/server boundaries explicit:
   use `"use client"` only where browser APIs, React state, or Amplify UI require it.
-- Reuse the helpers in `lib/amplify-auth-config.ts`, `lib/dynamodb.ts`, and `lib/meal-log.ts` instead of duplicating env checks or validation logic.
+- Reuse the helpers in `lib/amplify-auth-config.ts`, `lib/upload-food-image.ts`, `lib/dynamodb.ts`, and `lib/meal-log.ts` instead of duplicating env checks, S3 upload wiring, or validation logic.
 - Keep validation strict and user-facing errors clear, following the pattern in `app/api/meals/route.ts`.
 - Favor small, targeted changes. Do not expand scope beyond the requested step.
 
@@ -64,12 +66,14 @@ Notes:
 - `app/page.tsx` links to `/dashboard`, but there is no `app/dashboard/page.tsx` yet.
 - `README.md` is still the default Next.js starter README and does not describe this app yet.
 - The `scripts/` directory is currently empty.
-- Test coverage is minimal right now; only `lib/amplify-auth-config.ts` has a test file in the repo.
+- Test coverage is still small, but the repo now includes focused Vitest coverage for both Amplify config and S3 upload authorization behavior.
 
 ## When changing this project
 
 - If you touch auth or upload flows, verify which env vars are required for the specific screen.
+- If you touch S3 upload behavior, keep the logic in `lib/upload-food-image.ts` so it remains unit-testable.
 - If you touch `/api/meals`, preserve the existing validation rules:
   `imageKey` required, status must be valid, calorie values must be non-negative integers, and `caloriesMax >= caloriesMin`.
 - If you add new AWS-backed features, document any new env vars in `.env.example`.
+- If you change upload authorization or path-building rules, update `lib/upload-food-image.test.ts` to cover both allowed and denied cases.
 - If you implement the dashboard or meal history flow, update this file and the README to reflect the new entry points.
