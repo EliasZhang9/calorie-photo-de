@@ -3,12 +3,12 @@
 import { ChangeEvent, useState } from "react";
 import Link from "next/link";
 import { Authenticator, Button } from "@aws-amplify/ui-react";
-import { uploadData } from "aws-amplify/storage";
 import {
   configureAmplifyAuth,
   hasAmplifyAuthConfig,
   hasAmplifyStorageConfig,
 } from "@/lib/amplify-auth-config";
+import { uploadFoodImage } from "@/lib/upload-food-image";
 
 configureAmplifyAuth();
 
@@ -71,10 +71,6 @@ function UploadForm({ username }: UploadFormProps) {
   const [progress, setProgress] = useState(0);
   const [message, setMessage] = useState<string | null>(null);
   const [storedPath, setStoredPath] = useState<string | null>(null);
-  const sanitizedUsername = (username ?? "unknown-user").replace(
-    /[^a-zA-Z0-9._-]/g,
-    "-",
-  );
 
   const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
     const nextFile = event.target.files?.[0] ?? null;
@@ -97,25 +93,13 @@ function UploadForm({ username }: UploadFormProps) {
     setProgress(0);
 
     try {
-      const sanitizedName = file.name.replace(/[^a-zA-Z0-9._-]/g, "-");
-      const result = await uploadData({
-        // Keep each user's uploads in their own private folder in S3.
-        path: ({ identityId }) =>
-          `private/${identityId}#${sanitizedUsername}/food-images/${Date.now()}-${sanitizedName}`,
-        data: file,
-        options: {
-          contentType: file.type || "application/octet-stream",
-          onProgress: ({ transferredBytes, totalBytes }) => {
-            if (!totalBytes) {
-              return;
-            }
+      const path = await uploadFoodImage({
+        file,
+        username,
+        onProgress: setProgress,
+      });
 
-            setProgress(Math.round((transferredBytes / totalBytes) * 100));
-          },
-        },
-      }).result;
-
-      setStoredPath(result.path);
+      setStoredPath(path);
       setMessage("Upload complete.");
     } catch (error) {
       const errorMessage =
