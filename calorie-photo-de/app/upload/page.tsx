@@ -61,7 +61,11 @@ NEXT_PUBLIC_S3_REGION=`}
   );
 }
 
-function UploadForm() {
+function sanitizePathSegment(value: string) {
+  return value.replace(/[^a-zA-Z0-9._-]/g, "-");
+}
+
+function UploadForm({ username }: { username: string }) {
   const [file, setFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -89,11 +93,11 @@ function UploadForm() {
     setProgress(0);
 
     try {
-      const sanitizedName = file.name.replace(/[^a-zA-Z0-9._-]/g, "-");
+      const sanitizedName = sanitizePathSegment(file.name);
+      const sanitizedUsername = sanitizePathSegment(username);
       const result = await uploadData({
-        // Keep each user's uploads in their own private folder in S3.
-        path: ({ identityId }) =>
-          `private/${identityId}/food-images/${Date.now()}-${sanitizedName}`,
+        // Group each user's uploads under a readable username folder.
+        path: `users/${sanitizedUsername}/food-images/${Date.now()}-${sanitizedName}`,
         data: file,
         options: {
           contentType: file.type || "application/octet-stream",
@@ -175,7 +179,7 @@ function UploadForm() {
         <ul className="space-y-3 text-zinc-700">
           <li>Uploads the selected file directly from the browser to S3.</li>
           <li>Uses your Cognito identity pool to get temporary AWS credentials.</li>
-          <li>Keeps each user&apos;s files under a private path.</li>
+          <li>Keeps each user&apos;s files under a username-based folder.</li>
         </ul>
       </aside>
     </section>
@@ -203,7 +207,7 @@ export default function UploadPage() {
       </div>
 
       <Authenticator loginMechanisms={["username", "email"]} initialState="signIn">
-        <UploadForm />
+        {({ user }) => <UploadForm username={user?.username ?? "unknown-user"} />}
       </Authenticator>
     </main>
   );
