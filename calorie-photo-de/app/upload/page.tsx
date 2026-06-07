@@ -8,6 +8,7 @@ import {
   hasAmplifyAuthConfig,
   hasAmplifyStorageConfig,
 } from "@/lib/amplify-auth-config";
+import { createMealLog } from "@/lib/create-meal-log";
 import { uploadFoodImage } from "@/lib/upload-food-image";
 
 configureAmplifyAuth();
@@ -23,8 +24,9 @@ function MissingConfigState() {
           Add your Amplify Storage settings
         </h1>
         <p className="max-w-2xl text-base leading-7 text-zinc-700 sm:text-lg">
-          This upload step stores food images in S3, so Amplify needs both your
-          Cognito identity pool and S3 bucket details.
+          This upload step stores food images in S3 and then sends the saved
+          image path to your protected Next.js API route, so Amplify needs your
+          Cognito identity pool and S3 settings.
         </p>
       </div>
 
@@ -38,8 +40,8 @@ NEXT_PUBLIC_S3_BUCKET=
 NEXT_PUBLIC_S3_REGION=`}
         </pre>
         <p className="text-sm leading-6 text-zinc-600">
-          Storage uses the identity pool to get temporary AWS credentials for
-          S3 uploads.
+          Cognito signs the API request with the current user session, while
+          Storage still uses the identity pool for the S3 upload.
         </p>
       </section>
 
@@ -99,8 +101,13 @@ function UploadForm({ username }: UploadFormProps) {
         onProgress: setProgress,
       });
 
+      await createMealLog({
+        imageKey: path,
+        status: "uploaded",
+      });
+
       setStoredPath(path);
-      setMessage("Upload complete.");
+      setMessage("Upload complete and meal saved.");
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : "Upload failed.";
@@ -167,7 +174,7 @@ function UploadForm({ username }: UploadFormProps) {
         <ul className="space-y-3 text-zinc-700">
           <li>Uploads the selected file directly from the browser to S3.</li>
           <li>Uses your Cognito identity pool to get temporary AWS credentials.</li>
-          <li>Keeps each user&apos;s files under a private path.</li>
+          <li>Sends the uploaded image path to a Cognito-protected API route.</li>
         </ul>
       </aside>
     </section>

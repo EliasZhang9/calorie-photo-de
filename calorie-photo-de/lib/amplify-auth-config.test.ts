@@ -65,4 +65,28 @@ describe("amplify auth config", () => {
       { ssr: true },
     );
   });
+
+  it("configures Amplify with auth only when storage env vars are missing", async () => {
+    vi.stubEnv("NEXT_PUBLIC_COGNITO_USER_POOL_ID", "pool-id");
+    vi.stubEnv("NEXT_PUBLIC_COGNITO_USER_POOL_CLIENT_ID", "client-id");
+
+    const config = await loadModule();
+
+    config.configureAmplifyAuth();
+
+    expect(configureMock).toHaveBeenCalledWith(
+      {
+        Auth: {
+          Cognito: {
+            userPoolId: "pool-id",
+            userPoolClientId: "client-id",
+            loginWith: {
+              email: true,
+            },
+          },
+        },
+      },
+      { ssr: true },
+    );
+  });
 });
