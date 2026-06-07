@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 
 import { PutCommand } from "@aws-sdk/lib-dynamodb";
 import { NextResponse } from "next/server";
+import { verifyMealLogAccessToken } from "@/lib/cognito-auth";
 import {
   getDynamoDbDocumentClient,
   getMealLogsTableName,
@@ -19,7 +20,10 @@ function isOptionalString(value: unknown) {
 }
 
 function isOptionalInteger(value: unknown) {
-  return value === undefined || (typeof value === "number" && Number.isInteger(value) && value >= 0);
+  return (
+    value === undefined ||
+    (typeof value === "number" && Number.isInteger(value) && value >= 0)
+  );
 }
 
 function validateCreateMealLogInput(
@@ -30,10 +34,6 @@ function validateCreateMealLogInput(
   }
 
   const input = value as Record<string, unknown>;
-
-  if (typeof input.userName !== "string" || input.userName.trim() === "") {
-    return { ok: false, error: "userName is required." };
-  }
 
   if (typeof input.imageKey !== "string" || input.imageKey.trim() === "") {
     return { ok: false, error: "imageKey is required." };
@@ -77,7 +77,6 @@ function validateCreateMealLogInput(
   return {
     ok: true,
     data: {
-      userName: input.userName.trim(),
       imageKey: input.imageKey.trim(),
       status: input.status,
       caloriesMin: input.caloriesMin as number | undefined,
@@ -90,6 +89,22 @@ function validateCreateMealLogInput(
 }
 
 export async function POST(request: Request) {
+  let authenticatedUser: Awaited<ReturnType<typeof verifyMealLogAccessToken>>;
+
+  try {
+    authenticatedUser = await verifyMealLogAccessToken(
+      request.headers.get("authorization"),
+    );
+  } catch {
+    return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
+  }
+
+  const idToken = request.headers.get("x-id-token");
+
+  if (!idToken) {
+    return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
+  }
+
   let body: unknown;
 
   try {
@@ -110,7 +125,7 @@ export async function POST(request: Request) {
   const createdAt = new Date().toISOString();
   const mealLog: MealLogRecord = {
     id: randomUUID(),
-    userName: validation.data.userName,
+    userName: authenticatedUser.sub,
     imageKey: validation.data.imageKey,
     status: validation.data.status ?? "uploaded",
     createdAt,
@@ -136,7 +151,9 @@ export async function POST(request: Request) {
     mealLog.notes = validation.data.notes;
   }
 
-  await getDynamoDbDocumentClient().send(
+  await getDynamoDbDocumentClient({
+    idToken,
+  }).send(
     new PutCommand({
       TableName: getMealLogsTableName(),
       Item: mealLog,
