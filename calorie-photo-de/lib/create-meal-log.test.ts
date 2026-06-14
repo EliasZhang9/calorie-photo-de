@@ -43,8 +43,7 @@ describe("createMealLog", () => {
           userName: "demo-user",
           imageKey: "private/id#demo-user/food-images/example.jpg",
           status: "uploaded",
-          createdAt: 1780790400000,
-          readableCreatedAt: "2026-06-07T00:00:00.000Z",
+          createdAt: "2026-06-07T00:00:00.000Z",
         }),
         {
           status: 201,

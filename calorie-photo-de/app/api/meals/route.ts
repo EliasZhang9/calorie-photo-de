@@ -122,8 +122,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: validation.error }, { status: 400 });
   }
 
-  const createdAt = Date.now();
-  const readableCreatedAt = new Date(createdAt).toISOString();
+  const createdAt = new Date().toISOString();
   const mealLog: MealLogRecord = {
     id: randomUUID(),
     userSub: authenticatedUser.sub,
@@ -131,7 +130,6 @@ export async function POST(request: Request) {
     imageKey: validation.data.imageKey,
     status: validation.data.status ?? "uploaded",
     createdAt,
-    readableCreatedAt,
   };
 
   if (validation.data.caloriesMin !== undefined) {

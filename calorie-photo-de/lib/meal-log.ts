@@ -28,8 +28,7 @@ export interface MealLogRecord {
   confidence?: string;
   title?: string;
   notes?: string;
-  createdAt: number;
-  readableCreatedAt: string;
+  createdAt: string;
 }
 
 export function isMealLogStatus(value: unknown): value is MealLogStatus {
