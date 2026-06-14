@@ -30,6 +30,7 @@ describe("cognito auth", () => {
     vi.stubEnv("NEXT_PUBLIC_COGNITO_USER_POOL_CLIENT_ID", "client-id");
     verifyMock.mockResolvedValue({
       sub: "user-sub-123",
+      username: "demo-user",
     });
 
     const auth = await loadModule();
@@ -38,6 +39,7 @@ describe("cognito auth", () => {
     expect(result).toEqual({
       accessToken: "access-token",
       sub: "user-sub-123",
+      userName: "demo-user",
     });
     expect(createVerifierMock).toHaveBeenCalledWith({
       userPoolId: "eu-central-1_demo",

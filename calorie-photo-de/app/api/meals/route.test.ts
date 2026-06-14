@@ -34,9 +34,11 @@ describe("POST /api/meals", () => {
   });
 
   it("writes a meal log for the authenticated Cognito user", async () => {
+    vi.spyOn(Date, "now").mockReturnValue(1780790400000);
     verifyMealLogAccessTokenMock.mockResolvedValue({
       accessToken: "access-token",
       sub: "user-sub-123",
+      userName: "demo-user",
     });
     sendMock.mockResolvedValue(undefined);
 
@@ -63,9 +65,15 @@ describe("POST /api/meals", () => {
     const item = command.input.Item as Record<string, unknown>;
 
     expect(response.status).toBe(201);
-    expect(body.userName).toBe("user-sub-123");
+    expect(body.userSub).toBe("user-sub-123");
+    expect(body.userName).toBe("demo-user");
     expect(body.imageKey).toBe("private/id#demo-user/food-images/example.jpg");
-    expect(item.userName).toBe("user-sub-123");
+    expect(body.createdAt).toBe(1780790400000);
+    expect(body.readableCreatedAt).toBe("2026-06-07T00:00:00.000Z");
+    expect(item.userSub).toBe("user-sub-123");
+    expect(item.userName).toBe("demo-user");
+    expect(item.createdAt).toBe(1780790400000);
+    expect(item.readableCreatedAt).toBe("2026-06-07T00:00:00.000Z");
     expect(command.input.TableName).toBe("meal-logs");
     expect(verifyMealLogAccessTokenMock).toHaveBeenCalledWith(
       "Bearer access-token",
@@ -96,6 +104,7 @@ describe("POST /api/meals", () => {
     verifyMealLogAccessTokenMock.mockResolvedValue({
       accessToken: "access-token",
       sub: "user-sub-123",
+      userName: "demo-user",
     });
 
     const { POST } = await loadModule();

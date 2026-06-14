@@ -19,6 +19,7 @@ export interface CreateMealLogInput {
 
 export interface MealLogRecord {
   id: string;
+  userSub: string;
   userName: string;
   imageKey: string;
   status: MealLogStatus;
@@ -27,7 +28,8 @@ export interface MealLogRecord {
   confidence?: string;
   title?: string;
   notes?: string;
-  createdAt: string;
+  createdAt: number;
+  readableCreatedAt: string;
 }
 
 export function isMealLogStatus(value: unknown): value is MealLogStatus {

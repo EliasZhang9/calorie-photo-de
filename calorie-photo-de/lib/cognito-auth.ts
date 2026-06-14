@@ -3,6 +3,7 @@ import { CognitoJwtVerifier } from "aws-jwt-verify";
 type VerifiedMealLogToken = {
   accessToken: string;
   sub: string;
+  userName: string;
 };
 
 let verifier: ReturnType<typeof CognitoJwtVerifier.create> | null = null;
@@ -55,8 +56,20 @@ export async function verifyMealLogAccessToken(
 ): Promise<VerifiedMealLogToken> {
   const token = getBearerToken(authorizationHeader);
   const payload = await getVerifier().verify(token);
+  const userName =
+    typeof payload.username === "string"
+      ? payload.username
+      : typeof payload["cognito:username"] === "string"
+        ? payload["cognito:username"]
+        : null;
+
+  if (!userName) {
+    throw new Error("Token is missing the Cognito username claim.");
+  }
+
   return {
     accessToken: token,
     sub: payload.sub,
+    userName,
   };
 }
