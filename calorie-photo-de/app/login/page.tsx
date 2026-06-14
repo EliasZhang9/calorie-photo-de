@@ -2,23 +2,30 @@
 
 import Link from "next/link";
 import { Authenticator, Button } from "@aws-amplify/ui-react";
-import { configureAmplifyAuth, hasAmplifyAuthConfig } from "@/lib/amplify-auth-config";
+import {
+  configureAmplifyAuth,
+  hasCompleteAmplifyConfig,
+  hasPartialAmplifyConfig,
+} from "@/lib/amplify-auth-config";
 
 configureAmplifyAuth();
 
 function MissingConfigState() {
+  const isPartialConfig = hasPartialAmplifyConfig();
+
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-4xl flex-col gap-8 px-6 py-12 sm:px-10">
       <div className="space-y-3">
         <p className="text-sm font-medium uppercase tracking-wide text-zinc-500">
-          Cognito setup needed
+          Amplify setup needed
         </p>
         <h1 className="text-3xl font-semibold text-zinc-900 sm:text-4xl">
-          Add your Amplify Cognito settings
+          Add your Amplify Cognito and Storage settings
         </h1>
         <p className="max-w-2xl text-base leading-7 text-zinc-700 sm:text-lg">
-          The login UI is wired up, but it needs your Cognito app details before
-          it can connect.
+          {isPartialConfig
+            ? "Your Amplify setup is incomplete. This app now expects Cognito and S3 settings together before the login flow starts."
+            : "The login UI is wired up, but it needs both your Cognito and S3 details before it can connect."}
         </p>
       </div>
 
@@ -26,11 +33,14 @@ function MissingConfigState() {
         <h2 className="text-lg font-semibold text-zinc-900">Set these env vars</h2>
         <pre className="overflow-x-auto rounded-md bg-zinc-950 p-4 text-sm text-zinc-100">
 {`NEXT_PUBLIC_COGNITO_USER_POOL_ID=
-NEXT_PUBLIC_COGNITO_USER_POOL_CLIENT_ID=`}
+NEXT_PUBLIC_COGNITO_USER_POOL_CLIENT_ID=
+NEXT_PUBLIC_COGNITO_IDENTITY_POOL_ID=
+NEXT_PUBLIC_S3_BUCKET=
+NEXT_PUBLIC_S3_REGION=`}
         </pre>
         <p className="text-sm leading-6 text-zinc-600">
-          For this login step, only the user pool ID and app client ID are
-          required.
+          Cognito handles sign-in, and the S3-related settings complete the
+          shared Amplify configuration this app expects.
         </p>
       </section>
 
@@ -47,7 +57,7 @@ NEXT_PUBLIC_COGNITO_USER_POOL_CLIENT_ID=`}
 }
 
 export default function LoginPage() {
-  if (!hasAmplifyAuthConfig()) {
+  if (!hasCompleteAmplifyConfig()) {
     return <MissingConfigState />;
   }
 

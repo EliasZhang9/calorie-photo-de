@@ -19,7 +19,24 @@ describe("amplify auth config", () => {
     configureMock.mockReset();
   });
 
-  it("reports storage config only when auth and storage env vars exist", async () => {
+  it("reports auth, storage, and complete config as false when env vars are missing", async () => {
+    const config = await loadModule();
+
+    expect(config.hasAmplifyAuthConfig()).toBe(false);
+    expect(config.hasAmplifyStorageConfig()).toBe(false);
+    expect(config.hasCompleteAmplifyConfig()).toBe(false);
+    expect(config.hasPartialAmplifyConfig()).toBe(false);
+  });
+
+  it("does not configure Amplify when env vars are missing", async () => {
+    const config = await loadModule();
+
+    config.configureAmplifyAuth();
+
+    expect(configureMock).not.toHaveBeenCalled();
+  });
+
+  it("reports complete config only when both auth and storage env vars exist", async () => {
     vi.stubEnv("NEXT_PUBLIC_COGNITO_USER_POOL_ID", "pool-id");
     vi.stubEnv("NEXT_PUBLIC_COGNITO_USER_POOL_CLIENT_ID", "client-id");
     vi.stubEnv("NEXT_PUBLIC_COGNITO_IDENTITY_POOL_ID", "identity-id");
@@ -30,9 +47,34 @@ describe("amplify auth config", () => {
 
     expect(config.hasAmplifyAuthConfig()).toBe(true);
     expect(config.hasAmplifyStorageConfig()).toBe(true);
+    expect(config.hasCompleteAmplifyConfig()).toBe(true);
+    expect(config.hasPartialAmplifyConfig()).toBe(false);
   });
 
-  it("configures Amplify with S3 when storage env vars are present", async () => {
+  it("reports partial config when only auth env vars exist", async () => {
+    vi.stubEnv("NEXT_PUBLIC_COGNITO_USER_POOL_ID", "pool-id");
+    vi.stubEnv("NEXT_PUBLIC_COGNITO_USER_POOL_CLIENT_ID", "client-id");
+
+    const config = await loadModule();
+
+    expect(config.hasAmplifyAuthConfig()).toBe(true);
+    expect(config.hasAmplifyStorageConfig()).toBe(false);
+    expect(config.hasCompleteAmplifyConfig()).toBe(false);
+    expect(config.hasPartialAmplifyConfig()).toBe(true);
+  });
+
+  it("does not configure Amplify when only auth env vars exist", async () => {
+    vi.stubEnv("NEXT_PUBLIC_COGNITO_USER_POOL_ID", "pool-id");
+    vi.stubEnv("NEXT_PUBLIC_COGNITO_USER_POOL_CLIENT_ID", "client-id");
+
+    const config = await loadModule();
+
+    config.configureAmplifyAuth();
+
+    expect(configureMock).not.toHaveBeenCalled();
+  });
+
+  it("configures Amplify with Cognito and S3 when all env vars are present", async () => {
     vi.stubEnv("NEXT_PUBLIC_COGNITO_USER_POOL_ID", "pool-id");
     vi.stubEnv("NEXT_PUBLIC_COGNITO_USER_POOL_CLIENT_ID", "client-id");
     vi.stubEnv("NEXT_PUBLIC_COGNITO_IDENTITY_POOL_ID", "identity-id");
@@ -59,30 +101,6 @@ describe("amplify auth config", () => {
           S3: {
             bucket: "bucket-name",
             region: "eu-central-1",
-          },
-        },
-      },
-      { ssr: true },
-    );
-  });
-
-  it("configures Amplify with auth only when storage env vars are missing", async () => {
-    vi.stubEnv("NEXT_PUBLIC_COGNITO_USER_POOL_ID", "pool-id");
-    vi.stubEnv("NEXT_PUBLIC_COGNITO_USER_POOL_CLIENT_ID", "client-id");
-
-    const config = await loadModule();
-
-    config.configureAmplifyAuth();
-
-    expect(configureMock).toHaveBeenCalledWith(
-      {
-        Auth: {
-          Cognito: {
-            userPoolId: "pool-id",
-            userPoolClientId: "client-id",
-            loginWith: {
-              email: true,
-            },
           },
         },
       },

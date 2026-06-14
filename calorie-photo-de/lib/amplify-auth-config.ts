@@ -16,57 +16,51 @@ export function hasAmplifyAuthConfig() {
 }
 
 export function hasAmplifyStorageConfig() {
-  return Boolean(
-    hasAmplifyAuthConfig() &&
-      identityPoolId &&
-      storageBucket &&
+  return Boolean(identityPoolId && storageBucket && storageRegion);
+}
+
+export function hasCompleteAmplifyConfig() {
+  return hasAmplifyAuthConfig() && hasAmplifyStorageConfig();
+}
+
+export function hasPartialAmplifyConfig() {
+  const hasAnyAmplifyConfig = Boolean(
+    userPoolId ||
+      userPoolClientId ||
+      identityPoolId ||
+      storageBucket ||
       storageRegion,
   );
+
+  return hasAnyAmplifyConfig && !hasCompleteAmplifyConfig();
 }
 
 export function configureAmplifyAuth() {
-  if (isConfigured || !hasAmplifyAuthConfig()) {
+  if (isConfigured || !hasCompleteAmplifyConfig()) {
     return;
   }
 
-  if (hasAmplifyStorageConfig()) {
-    Amplify.configure(
-      {
-        Auth: {
-          Cognito: {
-            userPoolId: userPoolId!,
-            userPoolClientId: userPoolClientId!,
-            identityPoolId: identityPoolId!,
-            loginWith: {
-              email: true,
-            },
-          },
-        },
-        Storage: {
-          S3: {
-            bucket: storageBucket!,
-            region: storageRegion!,
+  Amplify.configure(
+    {
+      Auth: {
+        Cognito: {
+          userPoolId: userPoolId!,
+          userPoolClientId: userPoolClientId!,
+          identityPoolId: identityPoolId!,
+          loginWith: {
+            email: true,
           },
         },
       },
-      { ssr: true },
-    );
-  } else {
-    Amplify.configure(
-      {
-        Auth: {
-          Cognito: {
-            userPoolId: userPoolId!,
-            userPoolClientId: userPoolClientId!,
-            loginWith: {
-              email: true,
-            },
-          },
+      Storage: {
+        S3: {
+          bucket: storageBucket!,
+          region: storageRegion!,
         },
       },
-      { ssr: true },
-    );
-  }
+    },
+    { ssr: true },
+  );
 
   isConfigured = true;
 }

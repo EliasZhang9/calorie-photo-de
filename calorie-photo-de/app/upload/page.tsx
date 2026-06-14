@@ -5,8 +5,8 @@ import Link from "next/link";
 import { Authenticator, Button } from "@aws-amplify/ui-react";
 import {
   configureAmplifyAuth,
-  hasAmplifyAuthConfig,
-  hasAmplifyStorageConfig,
+  hasCompleteAmplifyConfig,
+  hasPartialAmplifyConfig,
 } from "@/lib/amplify-auth-config";
 import { createMealLog } from "@/lib/create-meal-log";
 import { uploadFoodImage } from "@/lib/upload-food-image";
@@ -14,19 +14,21 @@ import { uploadFoodImage } from "@/lib/upload-food-image";
 configureAmplifyAuth();
 
 function MissingConfigState() {
+  const isPartialConfig = hasPartialAmplifyConfig();
+
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-4xl flex-col gap-8 px-6 py-12 sm:px-10">
       <div className="space-y-3">
         <p className="text-sm font-medium uppercase tracking-wide text-zinc-500">
-          Storage setup needed
+          Amplify setup needed
         </p>
         <h1 className="text-3xl font-semibold text-zinc-900 sm:text-4xl">
-          Add your Amplify Storage settings
+          Add your Amplify Cognito and Storage settings
         </h1>
         <p className="max-w-2xl text-base leading-7 text-zinc-700 sm:text-lg">
-          This upload step stores food images in S3 and then sends the saved
-          image path to your protected Next.js API route, so Amplify needs your
-          Cognito identity pool and S3 settings.
+          {isPartialConfig
+            ? "Your Amplify setup is incomplete. This app now expects Cognito and S3 settings together before uploads can start."
+            : "This upload step stores food images in S3 and then sends the saved image path to your protected Next.js API route, so Amplify needs both Cognito and S3 settings."}
         </p>
       </div>
 
@@ -182,7 +184,7 @@ function UploadForm({ username }: UploadFormProps) {
 }
 
 export default function UploadPage() {
-  if (!hasAmplifyAuthConfig() || !hasAmplifyStorageConfig()) {
+  if (!hasCompleteAmplifyConfig()) {
     return <MissingConfigState />;
   }
 
